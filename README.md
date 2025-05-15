@@ -156,8 +156,100 @@ alpha = 0.5
 
 Proses klarifikasi masalah telah mengidentifikasi tantangan utama di perencanaan ruang terbuka, yaitu ketidakseimbangan antara penyediaan ruang dan akses, keterbatasan benchmarking antar kota, dan ketiadaan data interaksi. Dengan menetapkan tujuan untuk menganalisis dan mengelompokkan kota berdasarkan indikator utama serta mengembangkan sistem rekomendasi berbasis data, proyek ini menyediakan dasar ilmiah untuk mendukung kebijakan urban yang lebih tepat sasaran.
 
-**Solution Approach** yang diusulkan berupa:
-- **Content‑Based Filtering:** Solusi yang telah diterapkan, mengandalkan data numerik untuk menghitung kemiripan antara kota.
-- **Collaborative Filtering (Opsional/Hybrid):** Kerangka konseptual yang siap dikembangkan ketika data tambahan umpan balik/rating pengguna telah tersedia, memungkinkan pendekatan hybrid untuk meningkatkan rekomendasi dengan memasukkan aspek personal dan interaksi pengguna.
+---
+
+## Data Understanding
+
+### 1. Informasi Umum dan Sumber Data
+
+- **Sumber Data:**  
+  Dataset yang digunakan dalam proyek ini diperoleh dari situs UN-Habitat, yang menyediakan informasi mengenai ruang terbuka dan green areas di berbagai kota.  
+  **Link Download:**  
+  [UN-Habitat – Open Spaces and Green Areas](https://data.unhabitat.org/pages/open-spaces-and-green-areas)
+
+- **Jumlah Data:**  
+Jumlah Baris dan Kolom:
+Dataset memiliki 1711 entri (baris) dengan 15 kolom. Ukuran ini menunjukan bahwa dataset cukup besar untuk analisis komparatif antar kota maupun negara. Dataset awal memiliki 1711 baris. Setelah menghapus baris yang memiliki missing values di salah satu atau kedua kolom indikator utama, dataset berkurang menjadi 1363 baris. Artinya, sebanyak 1711 – 1363 = 348 baris (sekitar 20,3% dari total data) telah dihapus karena tidak memiliki data lengkap untuk kedua indikator kunci. Ini menunjukkan bahwa cukup banyak data yang tidak lengkap di bagian indikator ruang terbuka dan aksesibilitas, sehingga perlu perhatian khusus pada langkah pra-pemrosesan data.
+
+- **Kondisi Data:**  
+  Data belum mengalami normalisasi atau standarisasi awal saat diunduh, sehingga nilai-nilai pada beberapa fitur seperti persentase ruang terbuka dan aksesibilitas perlu dipersiapkan melalui teknik scaling. Beberapa entri mengandung missing values yang diatasi dengan penghapusan atau imputasi—proses ini dijelaskan lebih lanjut di bagian Data Preparation.
+
+### 2. Variabel (Fitur) pada Data
+
+Dataset yang digunakan mengandung beberapa variabel utama, yakni:
+
+1. **City Code:**  
+   Kode unik untuk masing-masing kota yang digunakan untuk identifikasi (misalnya, "AF_KABUL", "AL_TIRANE", dsb.).
+
+2. **City Name:**  
+   Nama kota sebagai informasi deskriptif.
+
+3. **Country or Territory Name:**  
+   Nama negara atau wilayah di mana kota tersebut berada.
+
+4. **Average share of the built-up area of cities that is open space for public use for all (%) [a]:**  
+   Persentase area terbangun kota yang dialokasikan sebagai ruang terbuka untuk publik. Variabel ini mewakili seberapa besar ruang tidak terbangun (green spaces, taman, dsb.) yang disediakan untuk umum.
+
+5. **Average share of urban population with convenient access to open public spaces (%) [b]:**  
+   Persentase penduduk kota yang memiliki akses yang mudah ke ruang terbuka publik. Variabel ini mencerminkan kualitas dan jangkauan infrastruktur ruang terbuka yang ada.
+
+6. **Derived Feature – Difference (b - a):**  
+   Selisih antara nilai [b] dan [a]. Nilai positif mengindikasikan bahwa aksesibilitas (b) lebih tinggi daripada persentase ruang terbuka (a); sebaliknya, nilai negatif menunjukkan bahwa penyediaan ruang terbuka mungkin lebih banyak daripada akses yang tersedia. Fitur ini membantu mengidentifikasi ketidakseimbangan antara penyediaan dan penggunaan ruang terbuka.
+
+### 3. Tahapan Eksploratory Data Analysis (EDA)
+
+Beberapa langkah eksplorasi yang telah dilakukan dalam analisis data meliputi:
+
+- **Statistik Deskriptif:**  
+  Dilakukan perhitungan ringkasan statistik (mean, median, standard deviation) untuk masing-masing fitur. Hal ini membantu memahami sebaran dan kecenderungan umum nilai fitur.
+  
+- **Visualisasi Distribusi:**  
+  - **Histogram dan Boxplot:** Menganalisis distribusi dari [a] dan [b] untuk mengidentifikasi adanya outlier dan memahami sebaran data.  
+  - **Contoh Insight:** Ditemukan bahwa nilai [a] berada di rentang yang relatif sempit (misalnya, 9%–20%), sedangkan nilai [b] memiliki variasi yang lebih luas, mengindikasikan adanya perbedaan signifikan dalam tingkat akses di beberapa kota.
+  
+- **Visualisasi Hubungan Antar Variabel:**  
+  - **Scatter Plot:** Contohnya, scatter plot yang memetakan “Difference (b - a)” terhadap “Average share of urban population with convenient access to open public spaces (%) [b]” serta visualisasi cluster berdasarkan kedua fitur utama.  
+  - **Insight Visual:** Dari plot tersebut dapat diidentifikasi pola-pola keberelahan yang menunjukkan bahwa beberapa kota memiliki akses yang jauh lebih baik dibandingkan dengan ruang terbuka yang disediakan, sedangkan untuk kelompok lainnya, keseimbangan berada pada titik mendekati nol.
+  
+- **Segmentasi Awal Menggunakan Clustering:**  
+  Visualisasi clustering pada data yang telah di‑scale memberikan gambaran mengenai kelompok-kelompok kota yang memiliki karakteristik serupa. Hal ini tidak hanya membantu dalam penyusunan sistem rekomendasi, tetapi juga menyediakan insight bagi perencana kota untuk melakukan benchmark dan merancang kebijakan yang lebih terarah.
+
+### 4. Visualisasi Contoh
+
+Berikut adalah contoh kode untuk visualisasi distribusi dan hubungan antar variabel:
+
+```python
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Contoh Histogram untuk fitur [a]
+plt.figure(figsize=(8, 5))
+sns.histplot(df_scaled["Average share of the built-up area of cities that is open space for public use for all (%) [a]"], bins=30, kde=True)
+plt.title("Distribusi Persentase Ruang Terbuka Publik ([a])")
+plt.xlabel("Persentase Ruang Terbuka")
+plt.ylabel("Frekuensi")
+plt.show()
+
+# Contoh Scatter Plot untuk melihat hubungan antara Difference (b - a) dan [b]
+plt.figure(figsize=(10, 6))
+sns.scatterplot(
+    x='Difference (b - a)',
+    y='Average share of urban population with convenient access to open public spaces (%) [b]',
+    hue='Cluster',  # jika sudah dilakukan clustering
+    palette='viridis',
+    data=df_scaled,
+    alpha=0.7
+)
+plt.title("Hubungan antara Difference (b - a) dan Akses ([b])")
+plt.xlabel("Difference (b - a)")
+plt.ylabel("Akses ke Ruang Terbuka Publik (%) [b] (scaled)")
+plt.legend(title="Cluster")
+plt.show()
+```
+
+**Insight dari EDA:**  
+- **Distribusi yang Relatif Konsisten:** Data ruang terbuka ([a]) menunjukkan rentang yang stabil, namun terdapat outlier di beberapa kota yang mungkin perlu analisis lebih lanjut.  
+- **Perbedaan dalam Akses:** Variasi yang lebih besar pada nilai [b] membuka peluang untuk mengevaluasi mengapa beberapa kota memiliki akses yang jauh lebih tinggi, yang mungkin terkait dengan faktor infrastruktur atau penataan kota.  
+- **Pemisahan Cluster yang Menjanjikan:** Hasil clustering awal menunjukkan adanya kelompok kota dengan karakteristik yang serupa, misalnya, kota dengan nilai Difference (b - a) tinggi versus rendah, yang dapat dijadikan dasar untuk rekomendasi kebijakan perbaikan.
 
 ---
