@@ -253,3 +253,69 @@ plt.show()
 - **Pemisahan Cluster yang Menjanjikan:** Hasil clustering awal menunjukkan adanya kelompok kota dengan karakteristik yang serupa, misalnya, kota dengan nilai Difference (b - a) tinggi versus rendah, yang dapat dijadikan dasar untuk rekomendasi kebijakan perbaikan.
 
 ---
+
+## Data Preparation
+
+Bagian ini menjelaskan secara rinci tahapan data preparation yang dilakukan pada notebook proyek, mulai dari pembersihan data awal hingga transformasi fitur. Proses ini penting untuk memastikan kualitas dan konsistensi data, sehingga hasil pemodelan nantinya dapat lebih akurat dan andal.
+
+### 1. Pembersihan Data (Data Cleaning)
+
+- **Identifikasi Missing Values:**  
+  Saya memeriksa dataset untuk menemukan adanya entri yang hilang atau tidak lengkap. Dengan menggunakan fungsi seperti `df.isnull().sum()`, saya mengidentifikasi variabel yang memiliki missing values.  
+  **Alasan:** Missing values dapat menyebabkan bias atau error pada model. Oleh karena itu, saya melakukan penanganan melalui penghapusan entri (jika jumlahnya relatif kecil) atau imputasi (jika diperlukan) agar data menjadi lebih representatif.
+
+- **Penghapusan Duplikasi:**  
+  Saya memeriksa adanya baris duplikat pada dataset dan menghapusnya dengan menggunakan `df.drop_duplicates()`.  
+  **Alasan:** Duplikasi data dapat mengacaukan statistik deskriptif dan membuat model terlatih pada data yang tidak unik, sehingga dapat menurunkan kinerja prediksi.
+
+### 2. Transformasi Data
+
+- **Konversi Tipe Data:**  
+  Pastikan bahwa setiap variabel memiliki tipe data yang sesuai, mengonversi variabel numerik yang berformat string menjadi tipe data numerik dengan `pd.to_numeric()`.  
+  **Alasan:** Tipe data yang tepat diperlukan agar operasi matematika dan statistik dapat dilakukan secara akurat.
+
+- **Ekstraksi Fitur Turunan:**  
+  Dibuat fitur tambahan yaitu **Difference (b - a)**, yang dihitung sebagai selisih antara:
+  - `Average share of urban population with convenient access to open public spaces (%) [b]`  
+    dan  
+  - `Average share of built-up area of cities that is open space for public use for all (%) [a]`  
+  **Alasan:** Fitur ini membantu mengungkap perbedaan antara aksesibilitas dan penyediaan ruang terbuka, sehingga model dapat lebih mudah mengklasifikasikan ketidaksesuaian antar kota.
+
+### 3. Normalisasi dan Scaling (Data Transformation)
+
+- **Normalisasi Data:**  
+  Sebelum melakukan pemodelan (misalnya clustering atau perhitungan similarity), data harus berada dalam skala yang seragam. Kami menerapkan teknik scaling, seperti Min-Max Scaling atau Standardization, sehingga nilai-nilai dari kedua fitur utama ([a] dan [b]) berada dalam rentang yang sebanding.  
+  **Alasan:** Skala yang berbeda-beda pada fitur dapat membuat algoritma berbasis jarak (seperti KMeans atau Nearest Neighbors) menjadi bias pada fitur dengan rentang nilai yang lebih besar. Dengan melakukan scaling, model dapat mengukur jarak antar titik data secara adil.
+
+- **Implementasi pada Notebook:**  
+  Transformasi data dilakukan secara berurutan:
+  1. Data dibaca dan divalidasi (cek format dan missing values).  
+  2. Penghapusan duplikasi dan imputasi untuk missing values (jika diperlukan).  
+  3. Konversi tipe data agar konsisten.  
+  4. Ekstraksi fitur turunan (Difference (b - a)).  
+  5. Scaling data menggunakan teknik normalisasi yang dipilih.
+  
+  Contoh kode untuk scaling:
+  ```python
+  from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+df_scaled = df_clean.copy()
+df_scaled[required_columns] = scaler.fit_transform(df_scaled[required_columns])
+
+# Lihat sampel data setelah scaling
+df_scaled[required_columns].head()
+  ```
+  
+### 4. Alasan dan Manfaat Tahapan Data Preparation
+
+- **Memastikan Kualitas Data:**  
+  Setiap tahapan pembersihan dan transformasi bertujuan untuk mengurangi noise dan ketidakkonsistenan data, sehingga hasil analisis dan pemodelan dapat dipercaya.
+  
+- **Meningkatkan Efektivitas Model:**  
+  Proses scaling dan normalisasi sangat krusial untuk algoritma berbasis jarak, sehingga model dapat mengukur kesamaan/pemisahan antar data secara lebih objektif.
+  
+- **Mempermudah Interpretasi Hasil:**  
+  Dengan menyiapkan data yang bersih dan terstruktur, tahap eksplorasi data (EDA) dapat dilakukan dengan lebih mendalam, sehingga insight yang diperoleh lebih akurat dan bermanfaat untuk pengembangan sistem rekomendasi.
+
+---
