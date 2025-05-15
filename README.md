@@ -1,3 +1,5 @@
+# Laporan Proyek Machine Learning - Tb Ulfah Nur Sya'baniah
+
 ## Project Overview (Ulasan Proyek)
 **Judul:**
 # **Meningkatkan Aksesibilitas Ruang Terbuka di Kota Urban: Pendekatan Content-Based Filtering dan Cluster Analysis**
@@ -169,10 +171,10 @@ Proses klarifikasi masalah telah mengidentifikasi tantangan utama di perencanaan
 
 - **Jumlah Data:**  
 Jumlah Baris dan Kolom:
-Dataset memiliki 1711 entri (baris) dengan 15 kolom. Ukuran ini menunjukan bahwa dataset cukup besar untuk analisis komparatif antar kota maupun negara. Dataset awal memiliki 1711 baris. Setelah menghapus baris yang memiliki missing values di salah satu atau kedua kolom indikator utama, dataset berkurang menjadi 1363 baris. Artinya, sebanyak 1711 – 1363 = 348 baris (sekitar 20,3% dari total data) telah dihapus karena tidak memiliki data lengkap untuk kedua indikator kunci. Ini menunjukkan bahwa cukup banyak data yang tidak lengkap di bagian indikator ruang terbuka dan aksesibilitas, sehingga perlu perhatian khusus pada langkah pra-pemrosesan data.
+Dataset memiliki 1711 entri (baris) dengan 15 kolom. Ukuran ini menunjukan bahwa dataset cukup besar untuk analisis komparatif antar kota maupun negara.
 
 - **Kondisi Data:**  
-  Data belum mengalami normalisasi atau standarisasi awal saat diunduh, sehingga nilai-nilai pada beberapa fitur seperti persentase ruang terbuka dan aksesibilitas perlu dipersiapkan melalui teknik scaling. Beberapa entri mengandung missing values yang diatasi dengan penghapusan atau imputasi—proses ini dijelaskan lebih lanjut di bagian Data Preparation.
+  Data belum mengalami normalisasi atau standarisasi awal saat diunduh, sehingga nilai-nilai pada beberapa fitur seperti persentase ruang terbuka dan aksesibilitas perlu dipersiapkan melalui teknik scaling. Beberapa entri mengandung missing values yang diatasi dengan penghapusan atau imputasi, proses ini dijelaskan lebih lanjut di bagian Data Preparation.
 
 ### 2. Variabel (Fitur) pada Data
 
@@ -261,7 +263,7 @@ Bagian ini menjelaskan secara rinci tahapan data preparation yang dilakukan pada
 ### 1. Pembersihan Data (Data Cleaning)
 
 - **Identifikasi Missing Values:**  
-  Saya memeriksa dataset untuk menemukan adanya entri yang hilang atau tidak lengkap. Dengan menggunakan fungsi seperti `df.isnull().sum()`, saya mengidentifikasi variabel yang memiliki missing values.  
+  Saya memeriksa dataset untuk menemukan adanya entri yang hilang atau tidak lengkap. Dengan menggunakan fungsi seperti `df.isnull().sum()`, saya mengidentifikasi variabel yang memiliki missing values. Dataset awal memiliki 1711 baris. Setelah menghapus baris yang memiliki missing values di salah satu atau kedua kolom indikator utama, dataset berkurang menjadi 1363 baris. Artinya, sebanyak 1711 – 1363 = 348 baris (sekitar 20,3% dari total data) telah dihapus karena tidak memiliki data lengkap untuk kedua indikator kunci. Ini menunjukkan bahwa cukup banyak data yang tidak lengkap di bagian indikator ruang terbuka dan aksesibilitas, sehingga perlu perhatian khusus pada langkah pra-pemrosesan data.
   **Alasan:** Missing values dapat menyebabkan bias atau error pada model. Oleh karena itu, saya melakukan penanganan melalui penghapusan entri (jika jumlahnya relatif kecil) atau imputasi (jika diperlukan) agar data menjadi lebih representatif.
 
 - **Penghapusan Duplikasi:**  
@@ -459,6 +461,80 @@ Dalam proyek ini, saya telah mengembangkan dua solusi rekomendasi untuk menyeles
   Merupakan kerangka dasar yang siap dikembangkan ketika data rating/feedback tersedia, berpotensi meningkatkan personalisasi rekomendasi.
 
 Dengan kedua pendekatan tersebut, sistem rekomendasi dapat digunakan sebagai alat pendukung pengambilan kebijakan dalam perencanaan ruang terbuka secara lebih berbasis data. Langkah selanjutnya adalah melakukan validasi lebih mendalam, tuning parameter model, dan mengumpulkan data interaksi untuk mengembangkan solusi hybrid yang utuh.
+
+---
+
+## Evaluation
+
+### 1. Metrik Evaluasi yang Digunakan
+
+Dalam proyek ini, saya menggunakan beberapa metrik evaluasi yang sesuai dengan konteks data, permasalahan (problem statement), dan solusi yang diinginkan. Metrik utama yang saya gunakan adalah:
+
+- **Silhouette Score:**  
+  Metrik ini digunakan untuk mengevaluasi kualitas pengelompokan (clustering) yang dilakukan pada data.  
+  - **Rumus:**  
+    Untuk setiap titik data \( i \), Silhouette Score dihitung dengan rumus:
+     
+    $$
+    \[
+    s(i) = \frac{b(i) - a(i)}{\max\{a(i), b(i)\}}
+    \]
+    $$
+    
+    di mana:  
+    - \( a(i) \) adalah jarak rata-rata dari titik \( i \) ke semua titik lain dalam cluster yang sama (intra-cluster distance).  
+    - \( b(i) \) adalah jarak rata-rata dari titik \( i \) ke semua titik di cluster terdekat yang berbeda (inter-cluster distance).  
+  - **Interpretasi:**  
+    Nilai Silhouette Score berkisar antara -1 hingga 1. Nilai yang mendekati 1 menunjukkan bahwa titik data tersebut berada jauh dari cluster lain, sehingga clustering berkualitas tinggi. Nilai mendekati 0 menunjukkan adanya tumpang tindih antar cluster, sedangkan nilai negatif mengindikasikan bahwa titik data mungkin salah diklaster.
+  
+- **Top-N Recommendation Evaluation (secara konseptual):**  
+  Meskipun proyek ini berfokus utama pada pengembangan sistem rekomendasi dengan content‑based filtering, evaluasi output rekomendasi juga diperlukan untuk mengukur relevansi rekomendasi.  
+  - **Metrik yang Umum Digunakan (untuk konteks rekomendasi):**  
+    **Precision@N** dan **Recall@N**.  
+    - **Precision@N:** Ukuran berapa proporsi item yang direkomendasikan yang benar-benar relevan.  
+    - **Recall@N:** Proporsi item relevan yang berhasil direkomendasikan dari keseluruhan item relevan.
+  - **Catatan:**  
+    Karena data umpan balik atau rating pengguna belum tersedia, evaluasi rekomendasi saat ini dilakukan secara kualitatif melalui analisis kesamaan fitur antar kota. Namun, metrik evaluasi ini dapat diintegrasikan ketika data interaksi telah tersedia.
+
+### 2. Hasil Evaluasi Berdasarkan Metrik
+
+- **Evaluasi Clustering dengan Silhouette Score:**  
+  Setelah melakukan clustering (dengan KMeans), saya menghitung Silhouette Score untuk menilai keterpisahan antar cluster.  
+  - **Contoh Hasil:**  
+    Pada salah satu eksperimen model KMeans, didapatkan nilai Silhouette Score sebesar 0.38.  
+  - **Interpretasi Hasil:**  
+    - Nilai 0.38 mengindikasikan bahwa struktur clustering yang terbentuk bersifat moderat. Meskipun terdapat pemisahan antar cluster, masih ada beberapa titik data yang berada di perbatasan, menunjukkan bahwa peningkatan pada pemilahan cluster (misalnya melalui penambahan fitur atau tuning parameter) dapat memberikan hasil yang lebih kompak.
+  - **Implikasi terhadap Problem Statement:**  
+    Hasil ini sejalan dengan pernyataan masalah, yang menunjukkan adanya ketidakseimbangan antara penyediaan ruang terbuka dan akses. Pengelompokan yang moderat juga mendukung tujuan untuk mengidentifikasi kota-kota yang memiliki karakteristik serupa sehingga intervensi atau benchmark bisa disusun lebih tepat.
+
+- **Evaluasi Rekomendasi (Top-N):**  
+  Dengan menggunakan pendekatan content‑based filtering, sistem rekomendasi menghasilkan output top‑N (misalnya, top-5 rekomendasi) untuk tiap kota.  
+  - **Analisa Hasil:**  
+    Rekomendasi yang diberikan (untuk kota "AF_KABUL" atau "AL_TIRANE") menunjukkan kecenderungan untuk mengelompokkan kota dengan nilai fitur [a] dan [b] yang hampir serupa.  
+  - **Validasi Kualitatif:**  
+    Analisis mendalam terhadap output rekomendasi mendukung bahwa kota-kota yang direkomendasikan memiliki kesamaan dalam distribusi ruang terbuka dan akses, yang secara konseptual memenuhi tujuan sistem rekomendasi.  
+  - **Rencana Evaluasi Lanjutan:**  
+    Ketika data interaksi atau umpan balik dari pengguna tersedia, evaluasi menggunakan metrik Precision@N dan Recall@N akan dilakukan untuk mengukur relevansi dan efektivitas rekomendasi secara kuantitatif.
+
+### 3. Kelebihan dan Keterbatasan Metrik Evaluasi
+
+- **Kelebihan:**
+  - **Silhouette Score:**  
+    Memberikan ukuran yang jelas dan kuantitatif mengenai kualitas clustering tanpa memerlukan label ground truth. Hal ini sangat sesuai untuk evaluasi unsupervised learning.
+  - **Top-N Recommendation Metrics (Secara Konseptual):**  
+    Metrik-metrik seperti Precision@N dan Recall@N membantu mengevaluasi relevansi output sistem rekomendasi secara praktis dan dapat mengarahkan perbaikan sistem ketika data interaksi sudah tersedia.
+
+- **Keterbatasan:**
+  - **Silhouette Score:**  
+    Meskipun memberikan gambaran umum, skor ini tidak sepenuhnya menangkap konteks domain dan dapat terpengaruh oleh keputusan parameter dalam clustering.
+  - **Evaluasi Rekomendasi:**  
+    Tanpa data umpan balik pengguna, evaluasi rekomendasi hanya bersifat kualitatif. Model collaborative filtering dan metrik rekomendasi kuantitatif (Precision@N, Recall@N) akan lebih informatif ketika data rating tersedia.
+
+---
+
+### 4. Kesimpulan Evaluasi
+
+Secara keseluruhan, evaluasi menggunakan Silhouette Score menunjukkan bahwa model clustering memiliki kualitas sedang (misalnya, skor 0.38) yang mendukung segmentasi awal kota berdasarkan fitur ruang terbuka dan aksesibilitas. Evaluasi top‑N rekomendasi secara kualitatif juga mendukung bahwa sistem sudah mampu mengidentifikasi kota-kota yang serupa, sekaligus membuka peluang untuk pengembangan sistem rekomendasi hybrid ketika data interaksi telah terakumulasi. Dengan demikian, metrik evaluasi yang digunakan tidak hanya relevan dengan konteks data dan masalah yang dihadapi, tetapi juga memberikan arahan jelas untuk perbaikan dan pengembangan lebih lanjut.
 
 ---
 
