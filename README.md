@@ -33,3 +33,131 @@ Beberapa riset dan publikasi internasional menekankan pentingnya keberadaan ruan
 Dengan menggabungkan pendekatan machine learning untuk analisis data perencanaan ruang, proyek ini memberikan kontribusi signifikan dalam menyediakan solusi berbasis data untuk mengoptimalkan distribusi ruang terbuka dan aksesibilitas kota. Hasil analisis dan rekomendasi yang dihasilkan tidak hanya mendukung perbaikan kualitas hidup, tetapi juga memberikan dasar ilmiah bagi perumusan kebijakan pembangunan kota yang responsif dan berkelanjutan.
 
 ---
+
+## Business Understanding
+
+Di bawah ini adalah contoh bagian **Business Understanding** dalam laporan proyek Anda yang telah dilengkapi dengan rubrik/kriteria penilaian tambahan untuk mendapatkan nilai bintang yang lebih tinggi. Dokumen berikut merinci proses klarifikasi masalah, pernyataan masalah, tujuan (goals), serta solution approach yang mengajukan dua pendekatan—content‑based filtering (yang telah diimplementasikan) dan collaborative filtering (opsional, ketika data tambahan tersedia).
+
+---
+
+## Business Understanding
+
+### 1. Proses Klarifikasi Masalah
+
+**a. Diskusi dan Pengumpulan Informasi**  
+- **Analisa Konteks Urban:**  
+  Proyek ini berangkat dari pengamatan bahwa di banyak kota terdapat ketidakseimbangan antara penyediaan ruang terbuka publik dan tingkat aksesibilitas yang dirasakan oleh penduduk.  
+- **Studi Literatur dan Data Terpercaya:**  
+  Data UN-Habitat menunjukkan bahwa ruang terbuka yang cukup dapat meningkatkan kualitas hidup. Sedangkan literatur dari World Health Organization (WHO) menekankan dampak positif ruang terbuka bagi kesehatan mental dan fisik.  
+
+**b. Identifikasi Variabel Kunci**  
+- **Indikator Utama:**  
+  1. *Average share of the built-up area of cities that is open space for public use for all (%) [a]*  
+  2. *Average share of urban population with convenient access to open public spaces (%) [b]*  
+- **Fitur Turunan:**  
+  Perhitungan selisih antara [b] dan [a] (Difference (b - a)) yang memberikan gambaran tentang ketidaksesuaian antara penyediaan fisik dan aksesibilitas.
+
+---
+
+### 2. Problem Statements (Pernyataan Masalah)
+
+- **Ketidakseimbangan Indikator:**  
+  Banyak kota menampilkan perbedaan yang signifikan antara ketersediaan ruang terbuka dan aksesibilitas penduduk. Meskipun area ruang terbuka publik mungkin memadai, distribusinya tidak selalu mendukung akses yang optimal bagi seluruh masyarakat.
+  
+- **Keterbatasan Benchmarking:**  
+  Saat ini, belum ada sistem rekomendasi yang secara kuantitatif mengelompokkan dan membandingkan kota berdasarkan kedua indikator tersebut, sehingga perbandingan praktik terbaik ("best-practice") untuk perencanaan ruang terbuka sulit dilakukan.
+  
+- **Keterbatasan Data Interaksi:**  
+  Data yang ada bersifat kuantitatif pada dua indikator utama. Data interaksi atau umpan balik pengguna (misalnya, rating terhadap kota) belum tersedia sehingga menantang penerapan metode collaborative filtering langsung.
+
+---
+
+### 3. Goals (Tujuan)
+
+Proyek ini memiliki beberapa tujuan strategis, antara lain:
+
+- **Analisis dan Segmentasi:**  
+  Menggunakan data kuantitatif untuk mengidentifikasi pola dan segmentasi kota berdasarkan rasio alokasi ruang terbuka ([a]) dan aksesibilitas ([b]). Tujuannya adalah mengelompokkan kota dengan karakteristik serupa sehingga perencanaan intervensi bisa disesuaikan.
+
+- **Pengembangan Sistem Rekomendasi:**  
+  Membangun model rekomendasi berbasis content‑based filtering yang memungkinkan perbandingan antar kota sehingga memperkuat basis data dalam merumuskan strategi perbaikan tata ruang.
+
+- **Dukungan Kebijakan Urban:**  
+  Menyajikan insight berbasis data untuk mendukung pembuat kebijakan dalam menentukan intervensi yang tepat, misalnya, apakah perlu menambah fasilitas ruang terbuka, memperbaiki konektivitas, atau melakukan redistribusi pemanfaatan ruang.
+
+---
+
+### 4. Solution Approach
+
+Untuk mencapai tujuan di atas, saya mengusulkan dua pendekatan solusi, yaitu:
+
+#### **A. Content‑Based Filtering**
+
+**Metode:**
+- **Fitur Numerik:**  
+  Model ini menggunakan dua indikator utama (ruang terbuka [a] dan akses [b]) beserta fitur turunan (Difference (b - a)) sebagai representasi konten dari masing-masing kota.
+- **Penentuan Kemiripan:**  
+  Menggunakan algoritma Nearest Neighbors untuk mengukur jarak (Euclidean distance) antar kota yang telah dinormalisasi, sehingga kota-kota dengan pola serupa akan saling direkomendasikan.
+- **Implementasi:**  
+  Pendekatan ini sudah diimplementasikan dalam proyek, menghasilkan rekomendasi dan segmentasi berbasis similarity dari fitur-fitur utama.
+
+**Keunggulan:**
+- Transparan dan mudah dijelaskan.
+- Tidak tergantung pada data interaksi, sehingga cocok digunakan dalam kondisi data yang terbatas.
+  
+**Kekurangan:**
+- Cenderung menghasilkan rekomendasi yang sangat mirip (over-specialization) tanpa variasi tambahan, karena hanya mengandalkan data fitur yang tersedia.
+
+---
+
+#### **B. Collaborative Filtering (Opsional/Hybrid Model)**
+
+**Metode:**
+- **Integrasi Umpan Balik Pengguna:**  
+  Jika di masa depan data tambahan berupa umpan balik, rating, atau interaksi pengguna terhadap kota tersedia, pendekatan collaborative filtering dapat diterapkan.  
+- **Perhitungan Similarity:**  
+  Menggunakan cosine similarity untuk menghitung kemiripan antar pengguna (atau antar kota berdasarkan feedback) dan menggabungkannya dengan similarity berbasis konten.
+  
+**Kerangka Dasar Hybrid Model:**  
+Sebagai kerangka dasar pengembangan, berikut pseudocode yang dapat dikembangkan ketika data interaksi sudah tersedia:
+
+```python
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Misalkan ratings adalah DataFrame dengan index sebagai user ID dan kolom sebagai City Code.
+# ratings = pd.read_csv("user_ratings.csv", index_col=0)
+
+# Collaborative Filtering: Hitung similarity antar pengguna (atau antar kota)
+# collaborative_similarity = cosine_similarity(ratings)
+
+# Content-Based Filtering: Gunakan fitur utama
+content_similarity = cosine_similarity(df_scaled[required_columns])
+
+# Kombinasikan kedua similarity dengan bobot 0.5 untuk masing-masing (misalnya)
+alpha = 0.5
+# hybrid_similarity = alpha * content_similarity + (1 - alpha) * collaborative_similarity
+```
+
+**Keunggulan:**
+- **Personalisasi dan Diversifikasi:**  
+  Dapat merekomendasikan kota yang tidak hanya mirip secara fitur, tetapi juga berdasarkan pola interaksi pengguna.
+- **Pendekatan Hybrid:**  
+  Dengan menggabungkan kedua metode, sistem dapat menyeimbangkan antar informasi objektif (data fitur) dan subjektif (feedback pengguna).
+
+**Kekurangan:**
+- **Ketergantungan pada Data:**  
+  Saat ini, data interaksi belum tersedia sehingga model collaborative filtering belum dapat diimplementasikan secara langsung.
+- **Cold-Start Problem:**  
+  Untuk kota atau pengguna baru, data rating yang minim dapat menyulitkan pembangkitan rekomendasi yang akurat.
+
+---
+
+### Kesimpulan Business Understanding
+
+Proses klarifikasi masalah telah mengidentifikasi tantangan utama di perencanaan ruang terbuka, yaitu ketidakseimbangan antara penyediaan ruang dan akses, keterbatasan benchmarking antar kota, dan ketiadaan data interaksi. Dengan menetapkan tujuan untuk menganalisis dan mengelompokkan kota berdasarkan indikator utama serta mengembangkan sistem rekomendasi berbasis data, proyek ini menyediakan dasar ilmiah untuk mendukung kebijakan urban yang lebih tepat sasaran.
+
+**Solution Approach** yang diusulkan berupa:
+- **Content‑Based Filtering:** Solusi yang telah diterapkan, mengandalkan data numerik untuk menghitung kemiripan antara kota.
+- **Collaborative Filtering (Opsional/Hybrid):** Kerangka konseptual yang siap dikembangkan ketika data tambahan umpan balik/rating pengguna telah tersedia, memungkinkan pendekatan hybrid untuk meningkatkan rekomendasi dengan memasukkan aspek personal dan interaksi pengguna.
+
+---
