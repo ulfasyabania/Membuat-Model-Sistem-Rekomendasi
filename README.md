@@ -298,13 +298,12 @@ Bagian ini menjelaskan secara rinci tahapan data preparation yang dilakukan pada
   Contoh kode untuk scaling:
   ```python
   from sklearn.preprocessing import StandardScaler
+  scaler = StandardScaler()
+  df_scaled = df_clean.copy()
+  df_scaled[required_columns] = scaler.fit_transform(df_scaled[required_columns])
 
-scaler = StandardScaler()
-df_scaled = df_clean.copy()
-df_scaled[required_columns] = scaler.fit_transform(df_scaled[required_columns])
-
-# Lihat sampel data setelah scaling
-df_scaled[required_columns].head()
+  # Lihat sampel data setelah scaling
+  df_scaled[required_columns].head()
   ```
   
 ### 4. Alasan dan Manfaat Tahapan Data Preparation
