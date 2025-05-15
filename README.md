@@ -318,3 +318,147 @@ Bagian ini menjelaskan secara rinci tahapan data preparation yang dilakukan pada
   Dengan menyiapkan data yang bersih dan terstruktur, tahap eksplorasi data (EDA) dapat dilakukan dengan lebih mendalam, sehingga insight yang diperoleh lebih akurat dan bermanfaat untuk pengembangan sistem rekomendasi.
 
 ---
+
+## Modeling and Result
+
+Bagian ini mendokumentasikan proses pembuatan sistem rekomendasi yang dirancang untuk mengatasi masalah ketidakseimbangan antara penyediaan ruang terbuka dan tingkat akses di berbagai kota. Saya menyajikan dua pendekatan solusi rekomendasi menggunakan algoritma yang berbeda, serta menampilkan output top‑N recommendation sebagai hasil pemodelan.
+
+---
+
+### 1. Sistem Rekomendasi dengan Content‑Based Filtering
+
+**a. Pendekatan dan Implementasi**  
+Pendekatan content‑based filtering memanfaatkan fitur numerik yang telah disiapkan, yaitu:
+- Persentase ruang terbuka ([a])  
+- Tingkat akses ruang terbuka ([b])  
+- Fitur turunan: **Difference (b - a)**  
+
+Pada tahap ini, saya juga telah melakukan segmentasi data, dengan menggunakan KMeans atau teknik clustering lain, untuk mengelompokkan kota berdasarkan pola kemiripan fitur. Setelah itu, untuk setiap kota yang dimasukkan sebagai input, saya menghitung kemiripan (menggunakan metode Nearest Neighbors dengan Euclidean distance) antara kota tersebut dengan kota lainnya dalam cluster yang sama. Proses ini memastikan bahwa rekomendasi yang diberikan adalah kota-kota dengan karakteristik serupa.
+
+Berikut contoh kode yang telah digunakan untuk menghasilkan top‑N recommendations:
+
+```python
+from sklearn.neighbors import NearestNeighbors
+import numpy as np
+
+def get_recommendations(input_city_code, n_recommendations=5):
+    # Misalnya, City Code disimpan di df_clean
+    target = df_clean[df_clean['City Code'] == input_city_code]
+    if target.empty:
+        print(f"Kota dengan kode {input_city_code} tidak ditemukan.")
+        return
+    # Pastikan indeks antara df_clean dan df_scaled sama
+    target_index = target.index[0]
+    target_features = features_for_clustering[target_index].reshape(1, -1)
+    
+    # Menggunakan cluster yang sudah didapat dari KMeans (misalnya, k = 2)
+    target_cluster = kmeans.labels_[target_index]
+    cluster_indices = np.where(kmeans.labels_ == target_cluster)[0]
+    subset_features = features_for_clustering[cluster_indices]
+    
+    # Inisialisasi NearestNeighbors dan cari rekomendasi
+    nn = NearestNeighbors(n_neighbors=n_recommendations+1, metric='euclidean')
+    nn.fit(subset_features)
+    distances, indices = nn.kneighbors(target_features)
+    
+    # Skip indeks pertama karena merupakan kota itu sendiri
+    recommended_indices = cluster_indices[indices.flatten()][1:]
+    recommendations = df_clean.iloc[recommended_indices]
+    return recommendations[['City Name', 'Country or Territory Name', 
+                            'Average share of the built-up area of cities that is open space for public use for all (%) [a]',
+                            'Average share of urban population with convenient access to open public spaces (%) [b]']]
+
+# Contoh penggunaan fungsi untuk mendapatkan top-5 rekomendasi
+print("Rekomendasi untuk kota AF_KABUL:")
+print(get_recommendations('AF_KABUL', n_recommendations=5))
+```
+
+**b. Kelebihan dan Kekurangan Content‑Based Filtering**  
+*Keunggulan:*
+- **Transparansi dan Interpretabilitas:** Rekomendasi dihasilkan berdasarkan kesamaan langsung fitur numerik yang mudah diinterpretasikan, sehingga mudah dijelaskan kepada pemangku kepentingan.
+- **Tidak Memerlukan Data Interaksi:** Cocok untuk kondisi saat data umpan balik atau rating pengguna belum tersedia.
+
+*Kekurangan:*
+- **Over-specialization:** Rekomendasi cenderung menampilkan kota yang sangat mirip dengan input, sehingga kurang bervariasi.
+- **Terbatas pada Fitur yang Tersedia:** Tidak menangkap aspek laten atau preferensi pengguna yang mungkin muncul dari data interaksi.
+
+---
+
+### 2. Sistem Rekomendasi dengan Collaborative Filtering (Opsional/Hybrid Model)
+
+Meskipun data interaksi pengguna atau rating terhadap kota belum tersedia saat ini, saya menyertakan kerangka dasar pengembangan model hybrid sebagai solusi jangka panjang. Pendekatan ini menggabungkan dua informasi, yaitu konten kota (content-based) dan umpan balik pengguna (collaborative).
+
+**a. Kerangka Dasar Hybrid Model**  
+Kerangka dasar pengembangan hybrid model dapat dirancang sebagai berikut:
+
+1. **Content-Based Filtering:**  
+   Menggunakan fitur utama ([a] dan [b]) untuk menghitung similarity antar kota. Contoh, menggunakan cosine similarity:
+   ```python
+   from sklearn.metrics.pairwise import cosine_similarity
+   content_similarity = cosine_similarity(df_scaled[required_columns])
+   ```
+
+2. **Collaborative Filtering:**  
+   Ketika data ratings/feedback sudah tersedia, misalnya melalui sebuah matriks rating (baris = pengguna, kolom = kode kota), kita dapat menghitung similarity antar kota berdasarkan umpan balik pengguna menggunakan cosine similarity:
+   ```python
+   # Misalnya, ratings disimpan di DataFrame 'ratings'
+   # collaborative_similarity = cosine_similarity(ratings.T)  # jika kolom menyangkut kota
+   ```
+
+3. **Penggabungan (Hybrid):**  
+   Menggabungkan dua similarity dengan bobot tertentu, misalnya:
+   ```python
+   alpha = 0.5
+   # hybrid_similarity = alpha * content_similarity + (1 - alpha) * collaborative_similarity
+   ```
+   Hasil hybrid similarity ini kemudian dapat digunakan untuk menghasilkan rekomendasi yang lebih bervariasi dan personal.
+
+**b. Kelebihan dan Kekurangan Collaborative Filtering (Hybrid)**  
+*Keunggulan:*
+- **Personalisasi yang Lebih Tinggi:** Apabila didukung data interaksi, pendekatan ini bisa menangkap preferensi pengguna yang tidak terekspresikan secara eksplisit lewat fitur numerik.
+- **Diversifikasi Rekomendasi:** Dapat merekomendasikan kota yang tidak hanya serupa secara konten tetapi juga relevan berdasarkan pola interaksi pengguna.
+
+*Kekurangan:*
+- **Ketergantungan Data:** Pendekatan ini membutuhkan data rating yang lengkap dan berkualitas. Pada kondisi awal, saat data tersebut belum tersedia, model collaborative filtering tidak dapat diimplementasikan secara optimal.
+- **Cold-Start Problem:** Untuk entitas atau pengguna baru, tidak ada data interaksi yang cukup, sehingga rekomendasi berdasarkan collaborative filtering mungkin kurang akurat.
+
+---
+
+### 3. Top-N Recommendation sebagai Output
+
+Berikut adalah ringkasan hasil output rekomendasi menggunakan metode content‑based filtering (solusi yang telah diimplementasikan):
+
+- **Contoh Output untuk Kota "AF_KABUL":**
+  - **Rekomendasi:**
+    - Kabul, Afghanistan  
+    - Tabuk, Saudi Arabia  
+    - Butwal, Nepal  
+    - Eldoret, Kenya  
+    - Irbid, Jordan  
+
+Output ini menunjukkan bahwa sistem berhasil mengelompokkan kota dengan pola yang serupa dalam hal penyediaan ruang terbuka dan akses, sehingga memberikan rekomendasi kota yang dapat dijadikan benchmark untuk intervensi kebijakan.
+
+---
+
+### 4. Ringkasan Evaluasi Model
+
+- **Kualitas Clustering:**  
+  Evaluasi awal menggunakan metrik Silhouette Score untuk clustering menunjukkan nilai sekitar 0.38, yang mengindikasikan pengelompokan moderat. Walaupun belum optimal, langkah-langkah tuning parameter dan penambahan fitur tambahan diharapkan dapat meningkatkan performa.
+
+- **Efektivitas Rekomendasi:**  
+  Hasil top‑N rekomendasi memberikan gambaran bahwa kota-kota yang direkomendasikan memiliki kemiripan signifikan berdasarkan fitur [a] dan [b]. Pendekatan hybrid (jika data tersedia) nantinya akan meningkatkan personalisasi rekomendasi.
+
+---
+
+### Kesimpulan Modeling and Result
+
+Dalam proyek ini, saya telah mengembangkan dua solusi rekomendasi untuk menyelesaikan permasalahan ketidakseimbangan antara ruang terbuka dan aksesibilitas di kota-kota urban:
+- **Content-Based Filtering:**  
+  Sudah diimplementasikan dan menghasilkan rekomendasi berbasis kemiripan numerik, dengan keunggulan dalam transparansi dan interpretabilitas.
+- **Collaborative Filtering (Hybrid Model – Opsional):**  
+  Merupakan kerangka dasar yang siap dikembangkan ketika data rating/feedback tersedia, berpotensi meningkatkan personalisasi rekomendasi.
+
+Dengan kedua pendekatan tersebut, sistem rekomendasi dapat digunakan sebagai alat pendukung pengambilan kebijakan dalam perencanaan ruang terbuka secara lebih berbasis data. Langkah selanjutnya adalah melakukan validasi lebih mendalam, tuning parameter model, dan mengumpulkan data interaksi untuk mengembangkan solusi hybrid yang utuh.
+
+---
+
