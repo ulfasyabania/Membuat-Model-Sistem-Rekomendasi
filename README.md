@@ -38,12 +38,6 @@ Dengan menggabungkan pendekatan machine learning untuk analisis data perencanaan
 
 ## Business Understanding
 
-Di bawah ini adalah contoh bagian **Business Understanding** dalam laporan proyek Anda yang telah dilengkapi dengan rubrik/kriteria penilaian tambahan untuk mendapatkan nilai bintang yang lebih tinggi. Dokumen berikut merinci proses klarifikasi masalah, pernyataan masalah, tujuan (goals), serta solution approach yang mengajukan dua pendekatan—content‑based filtering (yang telah diimplementasikan) dan collaborative filtering (opsional, ketika data tambahan tersedia).
-
----
-
-## Business Understanding
-
 ### 1. Proses Klarifikasi Masalah
 
 **a. Diskusi dan Pengumpulan Informasi**  
@@ -207,7 +201,7 @@ Proses klarifikasi masalah telah mengidentifikasi tantangan utama di perencanaan
 - **Kondisi Data:**  
   Data belum mengalami normalisasi atau standarisasi awal saat diunduh, sehingga nilai-nilai pada beberapa fitur seperti persentase ruang terbuka dan aksesibilitas perlu dipersiapkan melalui teknik scaling. Beberapa entri mengandung missing values yang diatasi dengan penghapusan atau imputasi, proses ini dijelaskan lebih lanjut di bagian Data Preparation.
 
-### 2. Variabel (Fitur) pada Data
+### 4. Variabel (Fitur) pada Data
 
 Dataset yang digunakan mengandung beberapa variabel, yakni:
 
@@ -256,9 +250,25 @@ Dataset yang digunakan mengandung beberapa variabel, yakni:
 15. **FootNote**  
     Fitur ini berisi catatan tambahan atau penjelasan yang melengkapi interpretasi data. FootNote dapat menyajikan detail kontekstual, keterangan pengukuran, atau informasi penting lainnya yang membantu dalam memahami kondisi serta nuansa data yang tidak tercakup oleh fitur utama.
 
+### 5. Penanganan Duplikasi
+
+1. **Integritas Data Terjaga**  
+   Fakta bahwa tidak ada baris duplikat berarti setiap entri di dataset merupakan catatan unik. Ini mengindikasikan bahwa data sudah dikumpulkan dan disusun dengan baik, tanpa terjadi pengulangan yang tidak terinformasi. Hal ini sangat penting untuk memastikan bahwa analisis statistik dan pemodelan selanjutnya tidak akan mengalami bias akibat adanya data yang berulang.
+
+2. **Keandalan Analisis yang Lebih Tinggi**  
+   Dengan tidak adanya duplikasi, hasil perhitungan statistik seperti rata-rata, median, atau distribusi nilai akan mencerminkan variasi yang nyata pada dataset. Setiap baris menyumbang informasi unik sehingga analisis lebih akurat dan representatif terhadap kondisi sebenarnya.
+
+3. **Penghematan Waktu dalam Pembersihan Data**  
+   Salah satu langkah awal dalam prapemrosesan data adalah identifikasi duplikasi. Output ini menunjukkan bahwa tidak perlu melakukan proses penghapusan duplikasi, sehingga Anda dapat lebih cepat berfokus pada aspek lain seperti penanganan missing values, outlier, atau feature engineering.
+
+4. **Dasar yang Kuat untuk Pengembangan Model**  
+   Model machine learning atau sistem rekomendasi sangat mengandalkan kualitas data input. Data yang bebas dari duplikasi membantu dalam mencegah overestimation atau bias selama pelatihan model karena tidak ada informasi yang terulang secara tidak perlu. Dengan demikian, model yang dibangun nantinya akan lebih andal dan valid.
+
+Secara keseluruhan, hasil "Jumlah baris duplikat: 0" merupakan indikator positif bahwa dataset memiliki integritas data yang tinggi. Hal ini merupakan fondasi yang kuat untuk melanjutkan ke tahapan analisis eksplorasi lebih lanjut dan pengembangan model tanpa harus khawatir adanya bias yang ditimbulkan oleh entri data yang berulang.
+
 ---
 
-### 3. Tahapan Eksploratory Data Analysis (EDA)
+### 6. Tahapan Eksploratory Data Analysis (EDA)
 
 Beberapa langkah eksplorasi yang telah dilakukan dalam analisis data meliputi:
 
@@ -327,7 +337,7 @@ Bagian ini menjelaskan secara rinci tahapan data preparation yang dilakukan pada
   **Alasan:** Missing values dapat menyebabkan bias atau error pada model. Oleh karena itu, saya melakukan penanganan melalui penghapusan entri (jika jumlahnya relatif kecil) atau imputasi (jika diperlukan) agar data menjadi lebih representatif.
 
 - **Penghapusan Duplikasi:**  
-  Saya memeriksa adanya baris duplikat pada dataset dan menghapusnya dengan menggunakan `df.drop_duplicates()`.  
+  Saya memeriksa tidak adanya baris duplikat pada dataset. 
   **Alasan:** Duplikasi data dapat mengacaukan statistik deskriptif dan membuat model terlatih pada data yang tidak unik, sehingga dapat menurunkan kinerja prediksi.
 
 ### 2. Transformasi Data
