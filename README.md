@@ -169,34 +169,94 @@ Proses klarifikasi masalah telah mengidentifikasi tantangan utama di perencanaan
   **Link Download:**  
   [UN-Habitat – Open Spaces and Green Areas](https://data.unhabitat.org/pages/open-spaces-and-green-areas)
 
-- **Jumlah Data:**  
-Jumlah Baris dan Kolom:
-Dataset memiliki 1711 entri (baris) dengan 15 kolom. Ukuran ini menunjukan bahwa dataset cukup besar untuk analisis komparatif antar kota maupun negara.
+  Indicator Title: SDG 11.7.1: Average share of the built-up area of cities that is open space for public use for all, by sex, age and persons with disabilities.
 
+- **Jumlah Baris dan Kolom:**  
+  Dataset memiliki 1711 entri (baris) dengan 15 kolom. Ukuran ini menunjukan bahwa dataset cukup besar untuk analisis komparatif antar kota maupun negara, namun juga perlu diperhatikan dalam hal komputasi untuk model rekomendasi nanti.
+
+- **Tipe Data:**  
+  - Terdapat kolom bertipe numerik seperti integer (misalnya, *SDG Goal*, *Country or Territory Code*, *Data Reference Year*) dan float (misalnya, *SDG Target* serta dua kolom indikator [a] dan [b]).  
+  - Sebagian besar kolom bersifat *object* (teks), terutama yang berisi informasi geografis dan metadata (seperti *Country or Territory Name*, *SDG Region*, *City Code*, *City Name*, *Data Source*, dan *FootNote*).
+
+---
+
+### 2. Kualitas Data dan Missing Values  
+- **Kolom dengan Data Lengkap:**  
+  Kolom-kolom seperti *SDG Goal*, *SDG Target*, *SDG Indicator*, *Country or Territory Code*, *Country or Territory Name*, *Data Units*, *Data Reference Year*, *Data Source*, dan *FootNote* memiliki 1711 entri yang lengkap. Ini memastikan bahwa aspek dasar metadata dan pengidentifikasi selalu ada di setiap baris.
+
+- **Kolom Geografis yang Hampir Lengkap:**  
+  - *SDG Region*, *SDG Sub-Region*, *City Code*, dan *City Name* masing-masing memiliki 14 missing values.  
+  - Missing values ini relatif kecil dibandingkan total 1711 baris (sekitar 0,8% dari dataset), namun perlu diperhatikan untuk analisis yang memanfaatkan informasi geografis.
+
+- **Kolom Indikator Kunci:**  
+  - *Average share of the built-up area of cities that is open space for public use for all (%) [a]* memiliki 199 missing values (sekitar 11,6% dari total data).  
+  - *Average share of urban population with convenient access to open public spaces (%) [b]* memiliki 149 missing values (sekitar 8,7%).  
+  Karena keduanya merupakan indikator utama untuk perancangan ruang publik, tingkat missing value yang cukup signifikan di kolom ini perlu ditangani, baik melalui imputasi, penghapusan baris, atau metode lain, agar analisis dan model dapat memperoleh hasil yang andal.
+
+---
+
+### 3. Statistik Deskriptif untuk Kolom Numerik  
+- **Rentang Nilai dan Distribusi:**  
+  Dengan fungsi `df.describe()`, kita dapat memperoleh informasi seperti nilai minimum, maksimum, rata-rata, dan standar deviasi untuk kolom-kolom numerik. Meskipun output lengkap dari `describe()` tidak ditampilkan di sini, kita dapat menyimpulkan:
+  - Nilai-nilai indikator harus berada di rentang 0-100 (dengan asumsi satuan adalah persen).
+  - Perbedaan nilai antar baris dapat memberikan informasi mengenai sebaran dan variasi dalam penyediaan ruang terbuka publik dan aksesibilitasnya di berbagai kota.
+
+- **Implikasi Statistik Deskriptif:**  
+  Informasi seperti rata-rata dan distribusi nilai akan membantu mengidentifikasi apakah ada outlier atau pola khusus. Jika terdapat nilai maksimum yang jauh lebih tinggi/lunak dibandingkan rata-rata, mungkin hal itu menunjukkan adanya kota dengan kinerja luar biasa (baik positif atau negatif) dalam menyediakan ruang terbuka.
+  
 - **Kondisi Data:**  
   Data belum mengalami normalisasi atau standarisasi awal saat diunduh, sehingga nilai-nilai pada beberapa fitur seperti persentase ruang terbuka dan aksesibilitas perlu dipersiapkan melalui teknik scaling. Beberapa entri mengandung missing values yang diatasi dengan penghapusan atau imputasi, proses ini dijelaskan lebih lanjut di bagian Data Preparation.
 
 ### 2. Variabel (Fitur) pada Data
 
-Dataset yang digunakan mengandung beberapa variabel utama, yakni:
+Dataset yang digunakan mengandung beberapa variabel, yakni:
 
-1. **City Code:**  
-   Kode unik untuk masing-masing kota yang digunakan untuk identifikasi (misalnya, "AF_KABUL", "AL_TIRANE", dsb.).
+1. **SDG Goal**  
+   Fitur ini merupakan angka yang menunjukkan tujuan utama dari Sustainable Development Goals (SDG). Setiap nomor mewakili salah satu tujuan global, seperti pengentasan kemiskinan, peningkatan kualitas pendidikan, dan perlindungan lingkungan. Penggunaan angka di sini membantu dalam pengkategorian dan pengelompokan entri berdasarkan tujuan SDG yang relevan.
 
-2. **City Name:**  
-   Nama kota sebagai informasi deskriptif.
+2. **SDG Target**  
+   Fitur ini mengindikasikan target spesifik yang hendak dicapai dalam kerangka SDG. Bentuk datanya berupa numerik (float64) sehingga dapat digunakan untuk representasi level pencapaian atau sasaran kuantitatif yang lebih terukur dalam setiap tujuan. Nilai target ini mendukung evaluasi kemajuan suatu negara atau wilayah dalam memenuhi kriteria SDG.
 
-3. **Country or Territory Name:**  
-   Nama negara atau wilayah di mana kota tersebut berada.
+3. **SDG Indicator**  
+   Berupa data teks, fitur ini mendeskripsikan indikator yang mengukur pencapaian terhadap target SDG. Indikator tersebut biasanya berupa parameter yang konkrit, misalnya persentase akses terhadap fasilitas umum atau data statistik lain yang mendukung analisis pencapaian tujuan SDG.
 
-4. **Average share of the built-up area of cities that is open space for public use for all (%) [a]:**  
-   Persentase area terbangun kota yang dialokasikan sebagai ruang terbuka untuk publik. Variabel ini mewakili seberapa besar ruang tidak terbangun (green spaces, taman, dsb.) yang disediakan untuk umum.
+4. **Country or Territory Code**  
+   Fitur ini adalah kode numerik unik yang mengidentifikasi setiap negara atau wilayah teritori dalam dataset. Dengan adanya kode ini, data dapat dengan mudah diurutkan atau diklasifikasikan berdasarkan masing-masing entitas geografis, yang mana akan mendukung analisis komparatif antar negara atau wilayah.
 
-5. **Average share of urban population with convenient access to open public spaces (%) [b]:**  
-   Persentase penduduk kota yang memiliki akses yang mudah ke ruang terbuka publik. Variabel ini mencerminkan kualitas dan jangkauan infrastruktur ruang terbuka yang ada.
+5. **Country or Territory Name**  
+   Berupa data teks, fitur ini menyajikan nama lengkap negara atau wilayah teritori. Informasi ini memberikan konteks geografis yang jelas dan membantu dalam memahami distribusi data serta relevansi antara setiap entitas yang dianalisis.
 
-6. **Derived Feature – Difference (b - a):**  
-   Selisih antara nilai [b] dan [a]. Nilai positif mengindikasikan bahwa aksesibilitas (b) lebih tinggi daripada persentase ruang terbuka (a); sebaliknya, nilai negatif menunjukkan bahwa penyediaan ruang terbuka mungkin lebih banyak daripada akses yang tersedia. Fitur ini membantu mengidentifikasi ketidakseimbangan antara penyediaan dan penggunaan ruang terbuka.
+6. **SDG Region**  
+   Fitur ini mengklasifikasikan data berdasarkan region SDG, yaitu pengelompokan geografis sesuai dengan standar internasional. Meskipun terdapat beberapa missing values (sekitar 14 entri), kategori ini tetap penting untuk segmentasi dan analisis regional guna mengidentifikasi tren atau pola tertentu dalam konteks lokasi.
+
+7. **SDG Sub-Region**  
+   Mirip dengan fitur SDG Region, fitur ini memberikan tingkat klasifikasi yang lebih spesifik dengan mengidentifikasikan sub-region dari tiap entitas. Penggunaan sub-region memungkinkan analisis yang lebih mendalam dalam pengelompokan geografis, sehingga potensi perbedaan daerah dapat dikenali dengan lebih jelas.
+
+8. **City Code**  
+   Fitur ini adalah kode unik untuk setiap kota, yang biasanya berupa kombinasi karakter atau angka. Meskipun bertipe data objek, City Code memudahkan identifikasi dan penelusuran masing-masing entitas kota secara spesifik dalam dataset.
+
+9. **City Name**  
+   Merupakan nama dari kota atau wilayah urban, fitur ini sangat krusial dalam konteks perencanaan ruang terbuka publik. Nama kota sebagai informasi geografis membantu dalam melakukan analisis berbasis lokasi dan memahami konteks urban dari data yang disajikan.
+
+10. **Average share of the built-up area of cities that is open space for public use for all (%) [a]**  
+    Fitur numerik ini mengukur persentase rata-rata dari area terbangun di kota yang disediakan sebagai ruang terbuka untuk penggunaan publik. Angka ini memberikan insight tentang seberapa banyak ruang yang dialokasikan untuk kebutuhan publik, yang esensial dalam perencanaan kota yang berkelanjutan.
+
+11. **Average share of urban population with convenient access to open public spaces (%) [b]**  
+    Fitur ini memberikan gambaran tentang persentase populasi urban yang memiliki akses mudah ke ruang terbuka publik. Dengan data numerik tersebut, analisis dapat melihat sejauh mana fasilitas publik menjangkau masyarakat, sehingga berperan sebagai indikator penting dalam evaluasi kesejahteraan perkotaan.
+
+12. **Data Units**  
+    Fitur ini menjelaskan satuan pengukuran yang digunakan dalam data—misalnya satuan persen untuk indikator ruang terbuka atau satuan lain yang relevan. Informasi satuan sangat penting untuk memastikan bahwa nilai-nilai data diinterpretasikan secara tepat dan konsisten dalam analisis.
+
+13. **Data Reference Year**  
+    Fitur ini menunjukkan tahun referensi atau tahun pengambilan data. Mengetahui konteks waktu data sangat penting untuk analisis tren, pembandingan antar periode, dan validitas konteks temporal dari data yang dikumpulkan.
+
+14. **Data Source**  
+    Fitur ini menginformasikan asal-usul data atau sumber penyedia data, seperti lembaga pemerintahan, organisasi internasional, atau metode pengumpulan data tertentu. Mengetahui sumber data mendukung verifikasi dan kredibilitas analisis, sehingga memberikan dasar kepercayaan pada hasil yang diperoleh.
+
+15. **FootNote**  
+    Fitur ini berisi catatan tambahan atau penjelasan yang melengkapi interpretasi data. FootNote dapat menyajikan detail kontekstual, keterangan pengukuran, atau informasi penting lainnya yang membantu dalam memahami kondisi serta nuansa data yang tidak tercakup oleh fitur utama.
+
+---
 
 ### 3. Tahapan Eksploratory Data Analysis (EDA)
 
