@@ -286,7 +286,7 @@ Beberapa langkah eksplorasi yang telah dilakukan dalam analisis data meliputi:
 - **Segmentasi Awal Menggunakan Clustering:**  
   Visualisasi clustering pada data yang telah di‑scale memberikan gambaran mengenai kelompok-kelompok kota yang memiliki karakteristik serupa. Hal ini tidak hanya membantu dalam penyusunan sistem rekomendasi, tetapi juga menyediakan insight bagi perencana kota untuk melakukan benchmark dan merancang kebijakan yang lebih terarah.
 
-### 4. Visualisasi Contoh
+### 7. Visualisasi Contoh
 
 Berikut adalah contoh kode untuk visualisasi distribusi dan hubungan antar variabel:
 
@@ -342,43 +342,123 @@ Bagian ini menjelaskan secara rinci tahapan data preparation yang dilakukan pada
 
 ### 2. Transformasi Data
 
-- **Konversi Tipe Data:**  
-  Pastikan bahwa setiap variabel memiliki tipe data yang sesuai, mengonversi variabel numerik yang berformat string menjadi tipe data numerik dengan `pd.to_numeric()`.  
-  **Alasan:** Tipe data yang tepat diperlukan agar operasi matematika dan statistik dapat dilakukan secara akurat.
+### 2.1 Standardisasi dengan Z-Score
 
-- **Ekstraksi Fitur Turunan:**  
-  Dibuat fitur tambahan yaitu **Difference (b - a)**, yang dihitung sebagai selisih antara:
-  - `Average share of urban population with convenient access to open public spaces (%) [b]`  
-    dan  
-  - `Average share of built-up area of cities that is open space for public use for all (%) [a]`  
-  **Alasan:** Fitur ini membantu mengungkap perbedaan antara aksesibilitas dan penyediaan ruang terbuka, sehingga model dapat lebih mudah mengklasifikasikan ketidaksesuaian antar kota.
+Untuk mengurangi perbedaan skala antar fitur, dilakukan standardisasi menggunakan teknik *z-score scaling*, di mana setiap nilai \( x \) diubah menjadi skor standar melalui rumus berikut:
 
-### 3. Normalisasi dan Scaling (Data Transformation)
+$$
+z = \frac{x - \text{mean}}{\text{standard deviation}}
+$$
 
-- **Normalisasi Data:**  
-  Sebelum melakukan pemodelan (misalnya clustering atau perhitungan similarity), data harus berada dalam skala yang seragam. Kami menerapkan teknik scaling, seperti Min-Max Scaling atau Standardization, sehingga nilai-nilai dari kedua fitur utama ([a] dan [b]) berada dalam rentang yang sebanding.  
-  **Alasan:** Skala yang berbeda-beda pada fitur dapat membuat algoritma berbasis jarak (seperti KMeans atau Nearest Neighbors) menjadi bias pada fitur dengan rentang nilai yang lebih besar. Dengan melakukan scaling, model dapat mengukur jarak antar titik data secara adil.
 
-- **Implementasi pada Notebook:**  
-  Transformasi data dilakukan secara berurutan:
-  1. Data dibaca dan divalidasi (cek format dan missing values).  
-  2. Penghapusan duplikasi dan imputasi untuk missing values (jika diperlukan).  
-  3. Konversi tipe data agar konsisten.  
-  4. Ekstraksi fitur turunan (Difference (b - a)).  
-  5. Scaling data menggunakan teknik normalisasi yang dipilih.
+Hal ini memastikan bahwa data memiliki rata-rata (mean) 0 dan standar deviasi 1.
+
+### 2.2 Penerapan pada Fitur Utama
+
+Kode berikut digunakan untuk menerapkan standardisasi pada dua fitur utama indikator ruang publik:
+- `Average share of the built-up area of cities that is open space for public use for all (%) [a]`
+- `Average share of urban population with convenient access to open public spaces (%) [b]`
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+df_scaled = df_clean.copy()
+df_scaled[required_columns] = scaler.fit_transform(df_scaled[required_columns])
+
+# Lihat sampel data setelah scaling
+df_scaled[required_columns].head()
+```
+
+## 3. Hasil dan Interpretasi
+
+Output dari kode di atas menghasilkan data yang telah ditransformasikan, contohnya:
+
+|    | Average share of the built-up area ... [a] | Average share of urban population ... [b] |
+|----|--------------------------------------------:|--------------------------------------------:|
+| 0  |                                      0.202389 |                                      1.388032 |
+| 1  |                                     -0.853848 |                                      0.595710 |
+| 2  |                                      0.066371 |                                      0.316333 |
+| 3  |                                     -0.214299 |                                      0.455975 |
+| 4  |                                      0.556942 |                                     -1.403230 |
+
+Beberapa insight yang dapat ditarik dari output tersebut:
+
+- **Skala Seragam:**  
+  Kedua fitur kini sudah berada dalam rentang yang seragam dengan nilai rata-rata nol dan standar deviasi satu. Hal ini berarti perhitungan jarak antar entri (misalnya, pada algoritma clustering) tidak akan bias karena fitur dengan rentang nilai yang jauh berbeda.
+
+- **Interpretasi Nilai Positif dan Negatif:**  
+  - Nilai positif (misalnya, pada baris 0 untuk kolom [b] sebesar 1.388032) mengindikasikan bahwa data tersebut berada di atas rata-rata.  
+  - Sebaliknya, nilai negatif (misalnya, pada baris 1 untuk kolom [a] sebesar -0.853848) menunjukkan bahwa data tersebut berada di bawah rata-rata.
   
-  Contoh kode untuk scaling:
-  ```python
-  from sklearn.preprocessing import StandardScaler
-  scaler = StandardScaler()
-  df_scaled = df_clean.copy()
-  df_scaled[required_columns] = scaler.fit_transform(df_scaled[required_columns])
+  Dengan demikian, analisis lebih lanjut dapat membandingkan apakah persentase ruang terbuka publik ([a]) dan aksesibilitas ([b]) sebuah kota berada dalam posisi yang lebih tinggi atau lebih rendah dari rata-rata keseluruhan.
 
-  # Lihat sampel data setelah scaling
-  df_scaled[required_columns].head()
-  ```
+- **Perbandingan Antar Entitas (Kota):**  
+  Dengan dataset yang telah di-scale, setiap baris (atau entitas kota) dapat dibandingkan langsung. Misalnya, pada baris 4, nilai fitur [a] menunjukkan bahwa kota tersebut memiliki persentase ruang terbuka yang di atas rata-rata, tetapi nilai [b] yang jauh negatif (yaitu -1.403230) mengindikasikan aksesibilitas yang jauh di bawah rata-rata. Ini menandakan adanya ketidaksesuaian antara penyediaan ruang dan kemudahan akses, yang tentu menjadi informasi penting untuk analisis lebih lanjut dan rekomendasi kebijakan.
+
+## 4. Penambahan Fitur "Difference (b - a)"
+
+## Tujuan Penambahan Fitur
+
+Fitur **Difference (b - a)** dibuat dengan tujuan:
+
+- **Mengukur Ketidakseimbangan:** Menentukan apakah akses ke ruang terbuka (indikator [b]) lebih tinggi atau lebih rendah jika dibandingkan secara relatif dengan ketersediaan ruang terbuka ([a]).
+- **Memberikan Insight Analitik:** Nilai selisih ini memberikan sinyal tentang efektivitas distribusi ruang terbuka publik. Nilai positif menunjukkan bahwa aksesibilitas penduduk lebih tinggi daripada ketersediaan ruang, sedangkan nilai negatif menandakan bahwa kota memiliki banyak ruang terbuka secara fisik namun penduduknya kurang mendapatkan akses optimal.
+- **Membantu Segmentasi dan Rekomendasi:** Fitur ini dapat digunakan sebagai basis untuk clustering atau segmentasi kota, sehingga model rekomendasi dapat mengidentifikasi daerah dengan potensi perbaikan tertentu.
+
+## Metodologi dan Implementasi
+
+Pada tahap ini, dataset yang telah dipraproses dan discale (disimpan dalam variabel `df_scaled`) digunakan untuk menambahkan fitur baru. Penerapannya dilakukan dengan langkah berikut:
+
+```python
+# Menambahkan fitur baru: selisih antara akses dan luas ruang terbuka
+df_scaled['Difference (b - a)'] = df_scaled['Average share of urban population with convenient access to open public spaces (%) [b]'] - df_scaled['Average share of the built-up area of cities that is open space for public use for all (%) [a]']
+
+# Tampilkan 5 baris pertama dari fitur baru
+df_scaled[['Difference (b - a)']].head()
+```
+
+Setelah menjalankan kode tersebut, didapatkan output sebagai berikut:
+
+| Index | Difference (b - a) |
+|-------|---------------------|
+| 0     | 1.185642            |
+| 1     | 1.449557            |
+| 2     | 0.249963            |
+| 3     | 0.670274            |
+| 4     | -1.960173           |
+
+## Interpretasi Hasil
+
+- **Nilai Positif:**  
+  Misalnya pada baris 0 (1.185642) dan baris 1 (1.449557) menunjukkan bahwa skor akses ([b]) lebih tinggi daripada skor ketersediaan ruang terbuka ([a]). Hal ini mengindikasikan bahwa meskipun persentase area yang dialokasikan untuk ruang terbuka mungkin tidak terlalu tinggi, lokasi atau distribusi ruang tersebut sudah terintegrasi dengan baik dalam jaringan urban sehingga penduduk memiliki akses yang optimal.
+
+- **Nilai Negatif:**  
+  Pada baris 4, nilai -1.960173 menunjukkan bahwa ketersediaan ruang terbuka secara fisik lebih tinggi dibandingkan dengan aksesibilitasnya. Hal ini dapat mengindikasikan adanya permasalahan distribusi atau konektivitas, di mana meskipun kota menyediakan area ruang terbuka yang cukup besar, akses bagi penduduk belum optimal.
+
+- **Insight Kontekstual:**  
+  Fitur baru ini membantu mengungkap perbedaan kritis antar kota—apakah keunggulan suatu kota lebih pada penyediaan ruang terbuka atau pada kemudahan akses penduduk terhadap ruang tersebut. Dengan demikian, insight ini sangat berguna untuk mengarahkan strategi intervensi, baik melalui perbaikan infrastruktur atau optimalisasi perencanaan tata ruang kota.
+
+## Implikasi untuk Analisis Lanjutan
+
+Penambahan fitur **Difference (b - a)** membuka peluang untuk melakukan analisis lebih mendalam, antara lain:
+
+- **Clustering Kota:**  
+  Dengan menggunakan nilai selisih ini, kota-kota dapat dikelompokkan berdasarkan kesenjangan antara akses dan penyediaan ruang terbuka. Ini memungkinkan identifikasi kelompok kota yang memerlukan strategi berbeda untuk meningkatkan efisiensi penggunaan ruang publik.
+
+- **Penyesuaian Rekomendasi Kebijakan:**  
+  Untuk kota dengan selisih negatif signifikan, rekomendasi dapat mengarah pada upaya peningkatan infrastruktur transportasi atau perbaikan konektivitas agar akses ke ruang terbuka lebih merata bagi penduduk.
+
+- **Pengembangan Model Rekomendasi:**  
+  Fitur ini dapat dimasukkan sebagai variabel input pada model sistem rekomendasi, sehingga model dapat mempertimbangkan tidak hanya nilai absolut dari ruang terbuka dan akses, tetapi juga perbedaan relatif antar keduanya untuk menghasilkan rekomendasi yang lebih tepat sasaran.
+
+## Kesimpulan
+
+Proses penambahan fitur **Difference (b - a)** merupakan langkah strategis dalam tahapan Data Preparation. Fitur tersebut menawarkan insight tambahan mengenai perbandingan antara akses dan ketersediaan ruang terbuka setelah dilakukan standardisasi. Dengan memberikan gambaran tentang ketidakseimbangan antar kedua indikator, tahap ini mempersiapkan dasar analisis yang lebih komprehensif sehingga nantinya dapat mendukung pembangunan model sistem rekomendasi yang efektif dan relevan untuk perencanaan urban.
+
+---
   
-### 4. Alasan dan Manfaat Tahapan Data Preparation
+### 5. Alasan dan Manfaat Tahapan Data Preparation
 
 - **Memastikan Kualitas Data:**  
   Setiap tahapan pembersihan dan transformasi bertujuan untuk mengurangi noise dan ketidakkonsistenan data, sehingga hasil analisis dan pemodelan dapat dipercaya.
@@ -545,11 +625,10 @@ Dalam proyek ini, saya menggunakan beberapa metrik evaluasi yang sesuai dengan k
   - **Rumus:**  
     Untuk setiap titik data \( i \), Silhouette Score dihitung dengan rumus:
      
-    $$
-    \[
-    s(i) = \frac{b(i) - a(i)}{\max\{a(i), b(i)\}}
-    \]
-    $$
+$$
+s(i) = \frac{b(i) - a(i)}{\max\{a(i), b(i)\}}
+$$
+
     
     di mana:  
     - \( a(i) \) adalah jarak rata-rata dari titik \( i \) ke semua titik lain dalam cluster yang sama (intra-cluster distance).  
